@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="theme-color" content="#2a7ee4">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="DO GIA DUNG TOAN HIEN">
+	<meta name="description" content="Chào mừng bạn đến với Đồ gia dụng Toản Hiền – nơi cung cấp các sản phẩm tiện ích cho gia đình như nồi cơm điện, máy xay, quạt và nhiều thiết bị hữu ích khác.
+Chúng tôi cam kết mang đến chất lượng tốt – giá hợp lý – phục vụ tận tâm.">
+	<link rel="shortcut icon" type="image/x-icon" href="/imgs/thiet-ke-logo-do-gia-dung-hc.png">
+	<link rel="stylesheet" href="/styles/admin/pages/dashboard_admin.css">
+
+	<title>TOẢN HIỀN.Admin - Bảng điều khiển</title>
+</head>
+
+<body>
+	<div class="grid-container">
+
+		<!-- Header -->
+		<%- include('../partials/header_admin', title) %>
+
+		<!-- Sidebar -->
+		<%- include('../partials/sidebar_admin') %>
+
+		<!-- Main -->
+		<main class="main-container">
+
+			<div class="main-cards">
+				<div class="card">
+					<span class="card__icon material-symbols-rounded">groups</span>
+					<div class="card-inner">
+						<h4>Khách hàng</h4>
+						<h1><%= summary.customer_count %></h1>
+					</div>
+				</div>
+
+				<div class="card">
+					<span class="card__icon material-symbols-rounded">shopping_cart</span>
+					<div class="card-inner">
+						<h4>Đơn hàng</h4>
+						<h1><%= summary.quantity_sold %></h1>
+					</div>
+				</div>
+
+				<div class="card">
+					<span class="card__icon material-symbols-rounded">monetization_on</span>
+					<div class="card-inner">
+						<h4>Doanh thu</h4>
+						<h1><%= summary.revenue %>đ</h1>
+					</div>
+				</div>
+			</div>
+
+			<div class="charts-card">
+				<h2 class="chart-title">Thống kê doanh thu</h2>
+				<div id="area"></div>
+			</div>
+
+			<div class="charts">
+				<div class="charts-card">
+					<h2 class="chart-title">Đơn hàng</h2>
+					<div id="bar"></div>
+				</div>
+
+				<div class="charts-card">
+					<h2 class="chart-title">Danh mục sản phẩm</h2>
+					<div id="donut"></div>
+				</div>
+			</div>
+
+		</main>
+		<!-- End Main -->
+
+	</div>
+
+	<!-- ApexCharts -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.5/apexcharts.min.js"></script>
+
+	<!-- Scripts -->
+	<script src="/scripts/admin/dashboard.js"></script>
+	<script src="/scripts/admin/index_admin.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="theme-color" content="#2a7ee4">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="DO GIA DUNG TOAN HIEN">
+	<meta name="description" content="Chúng tôi đã có hỗ trợ thanh toán qua Internet Banking cho các khách hàng.">
+	<link rel="shortcut icon" type="image/x-icon" href="/imgs/thiet-ke-logo-do-gia-dung-hc.png">
+	<link rel="stylesheet" href="/styles/pages/order/atm.css">
+
+	<title>TOẢN HIỀN. Thanh toán thẻ ngân hàng</title>
+</head>
+
+<body>
+	<%- include('../../partials/header', { header: header }) %>
+	<%- include('../../partials/breadcrumb', { breadcrumbs : [{ text : 'Đặt hàng', link : '' }, { text : 'Thanh toán', link : '' }] }) %>
+
+	<%
+		const safePurchase = purchase || {};
+		const orderDetails = Array.isArray(safePurchase.order_details) ? safePurchase.order_details : [];
+		const title = user?.user?.user_sex === 'Nam' ? 'Anh' : 'Chị';
+		const orderName = safePurchase.order_name || 'Quý khách';
+		const orderId = safePurchase.order_id || '';
+		const orderAddress = safePurchase.order_delivery_address || 'Chưa có địa chỉ';
+		let totalAmount = Number(safePurchase.order_total_after || 0);
+
+		if (!totalAmount && orderDetails.length > 0) {
+			orderDetails.forEach(detail => {
+				totalAmount += Number(detail.order_detail_price_after || 0) * Number(detail.order_detail_quantity || 1);
+			});
+		}
+	%>
+
+	<main class="transaction-container">
+		<div class="transaction-box">
+			<div class="success">
+				<div class="success-logo">
+					<span class="material-symbols-outlined">sweep</span>
+				</div>
+				<h3 class="success-text"><strong>ĐẶT HÀNG THÀNH CÔNG</strong></h3>
+			</div>
+			<div class="inner-box">
+				<div class="thanks">
+					Cảm ơn
+					<strong><%= title %> <%= orderName %></strong>
+					đã cho chúng tôi cơ hội được phục vụ.
+				</div>
+
+				<div class="info-order">
+					<div class="info-order__header--left">
+						<p><strong>ĐƠN HÀNG:</strong></p>
+						<p id="trans__id">#DH00<%= orderId %></p>
+					</div>
+					<div class="info-order__bill">
+						<span>- <strong>Người nhận hàng: </strong><span id="purchase-info"><%= orderName %></span></span>
+						<span>- <strong>Giao đến: </strong><span id="purchase-address"><%= orderAddress %></span></span>
+						<span>- <strong>Tổng tiền: </strong>
+							<span id="purchase-amount"><%= formatFunction.toCurrency(totalAmount) %></span>
+						</span>
+					</div>
+				</div>
+
+				<div class="purchase-status">Đơn hàng chưa được thanh toán</div>
+
+				<h4>Hình thức thanh toán: Chuyển khoản ngân hàng</h4>
+
+				<div class="pay_box">
+					<div class="pay_bank_frame">
+						<div class="pay_bank" id="bank-vietinbank">
+							<img src="/imgs/transaction/Logo-VietinBank-CTG-Te.png" alt="Vietinbank" id="btn-vietinbank">
+						</div>
+						<div class="pay_bank" id="bank-mb">
+							<img src="/imgs/transaction/Logo-MB-Bank-MBB.png" alt="MB" id="btn-mb">
+						</div>
+					</div>
+					<div class="pay_info" id="pay_info-vietinbank">
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Ngân hàng:</div>
+							<div class="pay_frame2">Vietinbank - NHTMCP Công thương Việt Nam</div>
+						</div>
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Số tài khoản:</div>
+							<div class="pay_frame2">105876717289</div>
+						</div>
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Thụ hưởng:</div>
+							<div class="pay_frame2">TRAN THU TRANG</div>
+						</div>
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Chi nhánh:</div>
+							<div class="pay_frame2">CN THÁI NGUYÊN - PGD PHAN ĐÌNH PHÙNG</div>
+						</div>
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Nội dung chuyển khoản:</div>
+							<div class="pay_frame2"><strong>DH00<%= orderId %></strong></div>
+						</div>
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Số tiền:</div>
+							<div class="pay_frame2"><strong><%= formatFunction.toCurrency(totalAmount) %></strong></div>
+						</div>
+						<div class="pay_qr">
+							<img src="/imgs/transaction/qr_ vietinbank.jpg" alt="Bank_QR">
+						</div>
+						<div class="pay_use">Dùng ứng dụng ngân hàng để quét mã QR chuyển khoản</div>
+					</div>
+					<div class="pay_info" id="pay_info-mb">
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Ngân hàng:</div>
+							<div class="pay_frame2">MBBank - NHTMCP Quân Đội</div>
+						</div>
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Số tài khoản:</div>
+							<div class="pay_frame2">0945404959</div>
+						</div>
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Thụ hưởng:</div>
+							<div class="pay_frame2">TRAN THU TRANG</div>
+						</div>
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Chi nhánh:</div>
+							<div class="pay_frame2">CN THÁI NGUYÊN</div>
+						</div>
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Nội dung chuyển khoản:</div>
+							<div class="pay_frame2"><strong>DH00<%= orderId %></strong></div>
+						</div>
+						<div class="pay_info_frame">
+							<div class="pay_frame1">Số tiền:</div>
+							<div class="pay_frame2"><strong><%= formatFunction.toCurrency(totalAmount) %></strong></div>
+						</div>
+						<div class="pay_qr">
+							<img src="/imgs/transaction/qr_mbbank.jpg" alt="Bank_QR">
+						</div>
+						<div class="pay_use">Dùng ứng dụng ngân hàng để quét mã QR chuyển khoản</div>
+					</div>
+				</div>
+				<button type="button" id="btn-home-page" class="btn btn--outlined pri">Thanh toán sau</button>
+			</div>
+		</div>
+	</main>
+
+	<%- include('../../components/scrollup') %>
+	<%- include('../../partials/footer') %>
+	<%- include('../../partials/app-bar') %>
+
+	<script src="/scripts/components/scrollup.js"></script>
+	<script src="/scripts/pages/notification/promotion.js"></script>
+	<script src="/scripts/pages/order/atm.js"></script>
+	<script src="/scripts/partials/header.js"></script>
+
+</body>
+
+</html>

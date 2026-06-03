@@ -1,0 +1,7 @@
+<% if (cate) { %>
+<a href="/search/results?category_id=<%= cate.category_id %>" class="cate__item">
+	<img src="/imgs/categories/<%= cate.category_img %>" alt="<%= cate.category_name ?? 'Danh mục' %>">
+	<h4><%= cate.category_name ?? 'Danh mục' %></h4>
+	<p><%= cate.category_count ?? 0 %> sản phẩm</p>
+</a>
+<% } %>

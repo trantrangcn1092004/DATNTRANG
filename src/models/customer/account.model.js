@@ -1,0 +1,147 @@
+const db = require('../../config/db/connect')
+const util = require('node:util')
+const jwt = require('jsonwebtoken')
+const query = util.promisify(db.query).bind(db)
+const general = require('../general.model')
+const index = require('./index.model')
+
+
+const account = function () { }
+
+
+account.updateInfo = async (req, res) => {
+    const updateInfo = `
+        UPDATE users 
+        SET 
+            user_login_name = ?,
+            user_name = ?,
+            user_birth = ?,
+            user_sex = ?,
+            user_email = ?,
+            user_phone = ?,
+            user_address = ?
+        WHERE user_id = ?
+    `
+
+    const values = [
+        req.body.user_phone,
+        req.body.user_name,
+        // new Date(req.body.user_birth),
+        req.body.user_birth,
+        req.body.user_sex,
+        req.body.user_email,
+        req.body.user_phone,
+        req.body.user_address,
+        req.user.user_id
+    ]
+
+    const result = await query(updateInfo, values)
+
+}
+
+
+account.checkPassword = async (req, callback) => {
+    const user_password = req.body.user_password
+    const user_id = req.user.user_id
+
+    db.query('SELECT *  FROM users WHERE user_id = ?', [user_id], async (err, result) => {
+        if (err) callback(1, 0, 0)
+        if (!await bcrypt.compare(user_password, result[0].user_password)) {
+            callback(0, 1, 0)
+        } else {
+            callback(0, 0, 1)
+        }
+    })
+}
+
+account.getPurchaseHistory = async (customer_id, order_status, order_id) => {
+    let sql = `
+        SELECT orders.*, paying_methods.paying_method_name
+        FROM orders
+        LEFT JOIN paying_methods
+            ON orders.paying_method_id = paying_methods.paying_method_id
+        WHERE orders.customer_id = ?
+    `
+
+    const params = [customer_id]
+
+    if (order_id) {
+        sql += ` AND orders.order_id = ?`
+        params.push(order_id)
+    }
+
+    if (order_status) {
+        sql += ` AND orders.order_status = ?`
+        params.push(order_status)
+    }
+
+    sql += ` ORDER BY orders.order_date DESC, orders.order_id DESC`
+
+    let purchaseHistorys = await query(sql, params)
+
+    const promises = purchaseHistorys.map(async (purchaseHistory) => {
+        purchaseHistory.order_details = await account.getDetailPurchaseHistorys(purchaseHistory.order_id, customer_id)
+        return purchaseHistory
+    })
+
+    await Promise.all(promises)
+    return purchaseHistorys
+}
+
+account.getDetailPurchaseHistorys = async (order_id, customer_id) => {
+    let sql = `
+        SELECT 
+            order_details.*,
+            products.product_id,
+            products.product_name,
+            products.product_avt_img,
+            product_variants.product_variant_name
+        FROM order_details
+        LEFT JOIN product_variants
+            ON order_details.product_variant_id = product_variants.product_variant_id
+        LEFT JOIN products
+            ON product_variants.product_id = products.product_id
+        WHERE order_details.order_id = ?
+    `
+
+    let detailPurchaseHistorys = await query(sql, [order_id])
+
+    const promises = detailPurchaseHistorys.map(async (detailPurchaseHistory) => {
+        detailPurchaseHistory.feedback = await account.viewFeedback(
+            customer_id,
+            detailPurchaseHistory.order_id,
+            detailPurchaseHistory.product_variant_id
+        )
+        return detailPurchaseHistory
+    })
+
+    await Promise.all(promises)
+    return detailPurchaseHistorys
+}
+
+account.insertFeedback = async (product_variant_id, customer_id, order_id, feedback_rate, feedback_content, callback) => {
+    if (feedback_content == '') feedback_content = 'Bạn không để lại lời nhận xét nào'
+    let insertFeedback = `INSERT INTO feedbacks (product_variant_id, customer_id, order_id, feedback_rate, feedback_content) VALUES (${product_variant_id}, ${customer_id}, ${order_id}, ${feedback_rate}, ?)`
+
+    db.query(insertFeedback, [feedback_content], (err, result) => {
+        if (err) {
+            console.log(err)
+            callback(1, 0)
+        } else {
+            callback(0, 1)
+        }
+    })
+}
+
+account.viewFeedback = async (customer_id, order_id, product_variant_id) => {
+    let viewFeedback = `SELECT * FROM feedbacks WHERE customer_id = ${customer_id} AND order_id = ${order_id} AND product_variant_id = ${product_variant_id};`
+    let feedback = await query(viewFeedback)
+
+    if (!feedback[0]) {
+        return 0
+    } else {
+        return feedback[0]
+    }  
+}
+
+module.exports = account

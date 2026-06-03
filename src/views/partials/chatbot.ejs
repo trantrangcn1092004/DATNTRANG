@@ -1,0 +1,178 @@
+<link rel="stylesheet" href="/styles/partials/chatbot.css">
+
+<div id="ai-chatbot">
+  <button id="chatbot-open" type="button">
+  <img src="/imgs/AI.png" alt="Toản Hiền AI">
+</button>
+
+  <div id="chatbot-box">
+    <div id="chatbot-header">
+      <div class="chatbot-header-left">
+        <div class="chatbot-avatar">
+          <img src="/imgs/AI.png" alt="Toản Hiền AI">
+        </div>
+        <div class="chatbot-title">
+          <strong>Đồ gia dụng Toản Hiền</strong>
+          <span>AI tư vấn sản phẩm</span>
+        </div>
+      </div>
+
+      <div class="chatbot-actions">
+        <button type="button" id="chatbot-more">...</button>
+        <button type="button" id="chatbot-close">⌵</button>
+      </div>
+    </div>
+
+    <div id="chatbot-content">
+      <div class="chatbot-note">
+        Bắt đầu trò chuyện nhanh với Toản Hiền.<br>
+        Chatbot hỗ trợ tư vấn và gợi ý sản phẩm đồ gia dụng.
+      </div>
+
+      <div class="chat-row bot">
+        <div class="chat-mini-avatar">
+          <img src="/imgs/AI.png" alt="Toản Hiền AI">
+        </div>
+        <div class="chat-message">
+          Xin chào! Đồ gia dụng Toản Hiền rất vui được hỗ trợ anh/chị.
+        </div>
+      </div>
+
+      <div class="chat-time" id="chat-time"></div>
+
+      <div class="chatbot-suggestions">
+        <button type="button" data-message="Tư vấn cho tôi nồi chiên không dầu dưới 2 triệu">Nồi chiên dưới 2 triệu</button>
+        <button type="button" data-message="Tôi muốn mua máy xay sinh tố">Máy xay sinh tố</button>
+        <button type="button" data-message="Có sản phẩm nào đang khuyến mãi không">Sản phẩm khuyến mãi</button>
+      </div>
+    </div>
+
+    <div id="chatbot-input-area">
+      <input id="chatbot-input" type="text" placeholder="Nhập tin nhắn, nhấn Enter để gửi..." />
+      <button id="chatbot-send" type="button">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const openBtn = document.getElementById('chatbot-open');
+    const closeBtn = document.getElementById('chatbot-close');
+    const chatbotBox = document.getElementById('chatbot-box');
+    const input = document.getElementById('chatbot-input');
+    const sendBtn = document.getElementById('chatbot-send');
+    const content = document.getElementById('chatbot-content');
+    const time = document.getElementById('chat-time');
+
+    const now = new Date();
+    time.innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ' Hôm nay';
+
+    openBtn.onclick = function () {
+      chatbotBox.classList.add('active');
+      document.getElementById('ai-chatbot').classList.add('opened');
+      input.focus();
+    };
+
+    closeBtn.onclick = function () {
+      chatbotBox.classList.remove('active');
+      document.getElementById('ai-chatbot').classList.remove('opened');
+    };
+
+    sendBtn.onclick = sendMessage;
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    document.querySelectorAll('.chatbot-suggestions button').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        input.value = btn.dataset.message;
+        sendMessage();
+      });
+    });
+
+    function createSafeLink(text) {
+      const div = document.createElement('div');
+      const lines = text.split('\n');
+
+      lines.forEach(function (line, index) {
+        if (line.includes('Xem chi tiết:')) {
+          const parts = line.split('Xem chi tiết:');
+          div.appendChild(document.createTextNode('Xem chi tiết: '));
+
+          const link = document.createElement('a');
+          link.href = parts[1].trim();
+          link.innerText = parts[1].trim();
+          link.className = 'chat-link';
+          div.appendChild(link);
+        } else {
+          div.appendChild(document.createTextNode(line));
+        }
+
+        if (index < lines.length - 1) {
+          div.appendChild(document.createElement('br'));
+        }
+      });
+
+      return div;
+    }
+
+    function addMessage(text, type) {
+      const row = document.createElement('div');
+      row.className = type === 'user' ? 'chat-row user' : 'chat-row bot';
+
+      if (type === 'bot') {
+        const avatar = document.createElement('div');
+        avatar.className = 'chat-mini-avatar';
+        avatar.innerHTML = '<img src="/imgs/AI.png" alt="Toản Hiền AI">';
+        row.appendChild(avatar);
+      }
+
+      const msg = document.createElement('div');
+      msg.className = 'chat-message';
+
+      if (type === 'bot') {
+        msg.appendChild(createSafeLink(text));
+      } else {
+        msg.innerText = text;
+      }
+
+      row.appendChild(msg);
+      content.appendChild(row);
+      content.scrollTop = content.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const message = input.value.trim();
+
+      if (!message) return;
+
+      addMessage(message, 'user');
+      input.value = '';
+
+      addMessage('Dạ em đang tìm sản phẩm phù hợp cho anh/chị ạ...', 'bot');
+
+      try {
+        const res = await fetch('/api/ai-chatbot', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message: message })
+        });
+
+        const data = await res.json();
+
+        content.lastChild.remove();
+
+        addMessage(data.reply || 'Dạ em chưa tìm thấy thông tin phù hợp ạ.', 'bot');
+
+      } catch (error) {
+        content.lastChild.remove();
+        addMessage('Dạ hệ thống tư vấn đang lỗi tạm thời ạ.', 'bot');
+      }
+    }
+  });
+</script>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="theme-color" content="#2a7ee4">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="DO GIA DUNG TOAN HIEN">
+	<meta name="description" content="Chi tiết đơn hàng của Đồ gia dụng Toản Hiền">
+	<link rel="shortcut icon" type="image/x-icon" href="/imgs/thiet-ke-logo-do-gia-dung-hc.png">
+	<link rel="stylesheet" href="/styles/admin/pages/order_view_admin.css">
+
+	<title>TOẢN HIỀN.Admin - Chi tiết đơn hàng</title>
+</head>
+
+<body>
+	<div class="grid-container">
+		<!-- Sidebar -->
+		<%- include('../partials/sidebar_admin') %>
+
+		<!-- Header -->
+		<%- include('../partials/header_admin', title) %>
+
+		<!-- Main -->
+		<main class="main-container">
+			<div class="detail-header">
+				<div>
+					<a class="admin-a back-link" href="/admin/orders_admin">
+						<span class="material-symbols-rounded">arrow_back</span>
+						Quay lại danh sách
+					</a>
+					<h3>Đơn hàng #<%= order.order_id %></h3>
+					<p>Ngày đặt: <%= helpers.formatDate(order.order_date) %></p>
+				</div>
+
+				<div class="detail-header__badges">
+					<span class="badge <%= order.order_is_paid ? 'badge--paid' : 'badge--unpaid' %>"><%= order.order_is_paid ? 'Đã thanh toán' : 'Chưa thanh toán' %></span>
+					<span class="badge <%= order.order_status === 'Hoàn thành' ? 'badge--completed' : order.order_status === 'Đang giao hàng' ? 'badge--shipping' : order.order_status === 'Đã hủy' ? 'badge--canceled' : 'badge--waiting' %>"><%= order.order_status %></span>
+				</div>
+			</div>
+
+			<% if (message) { %>
+			<div class="alert alert--success"><%= message %></div>
+			<% } %>
+
+			<% if (error) { %>
+			<div class="alert alert--error"><%= error %></div>
+			<% } %>
+
+			<div class="detail-grid">
+				<section class="panel panel--large">
+					<div class="panel__header">
+						<h4>Sản phẩm trong đơn</h4>
+					</div>
+
+					<div class="order-items">
+						<% if (!orderDetails || orderDetails.length === 0) { %>
+						<div class="empty-state">Đơn hàng chưa có sản phẩm.</div>
+						<% } else { %>
+						<% orderDetails.forEach(function(item) { %>
+						<div class="order-item">
+							<img src="/imgs/product_image/P<%= item.product_id %>/<%= item.product_avt_img || 'default.png' %>" alt="<%= item.product_name %>">
+							<div class="order-item__info">
+								<strong><%= item.product_name %></strong>
+								<small>Biến thể: <%= item.product_variant_name %></small>
+								<small>Mã biến thể: <%= item.product_variant_id %></small>
+							</div>
+							<div class="order-item__quantity">x<%= item.order_detail_quantity %></div>
+							<div class="order-item__price">
+								<strong><%= formatFunction.toCurrency(Number(item.line_total_after || 0)) %></strong>
+								<small>Đơn giá: <%= formatFunction.toCurrency(Number(item.order_detail_price_after || 0)) %></small>
+							</div>
+						</div>
+						<% }) %>
+						<% } %>
+					</div>
+
+					<div class="order-total">
+						<div><span>Tạm tính</span><strong><%= formatFunction.toCurrency(Number(order.order_total_before || 0)) %></strong></div>
+						<div><span>Tổng thanh toán</span><strong><%= formatFunction.toCurrency(Number(order.order_total_after || 0)) %></strong></div>
+					</div>
+				</section>
+
+				<section class="panel">
+					<div class="panel__header">
+						<h4>Thông tin khách hàng</h4>
+					</div>
+
+					<div class="info-list">
+						<div><span>Người nhận</span><strong><%= order.order_name %></strong></div>
+						<div><span>Số điện thoại</span><strong><%= order.order_phone %></strong></div>
+						<div><span>Email tài khoản</span><strong><%= order.customer_email || 'Chưa có' %></strong></div>
+						<div><span>Mã khách hàng</span><strong><%= order.customer_id %></strong></div>
+						<div><span>Địa chỉ giao</span><strong><%= order.order_delivery_address %></strong></div>
+					</div>
+				</section>
+
+				<section class="panel">
+					<div class="panel__header">
+						<h4>Cập nhật đơn hàng</h4>
+					</div>
+
+					<form class="update-form" method="POST" action="/admin/orders_admin/<%= order.order_id %>/update" id="orderUpdateForm">
+						<div class="form-group">
+							<label for="order_status">Trạng thái đơn hàng</label>
+							<select name="order_status" id="order_status">
+								<% statuses.forEach(function(status) { %>
+								<option value="<%= status %>" <%= order.order_status === status ? 'selected' : '' %>><%= status %></option>
+								<% }) %>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="order_is_paid">Thanh toán</label>
+							<select name="order_is_paid" id="order_is_paid">
+								<option value="0" <%= !order.order_is_paid ? 'selected' : '' %>>Chưa thanh toán</option>
+								<option value="1" <%= order.order_is_paid ? 'selected' : '' %>>Đã thanh toán</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="paying_method_id">Phương thức thanh toán</label>
+							<select name="paying_method_id" id="paying_method_id">
+								<% payingMethods.forEach(function(method) { %>
+								<option value="<%= method.paying_method_id %>" <%= order.paying_method_id === method.paying_method_id ? 'selected' : '' %>><%= method.paying_method_name %></option>
+								<% }) %>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="order_paying_date">Ngày thanh toán</label>
+							<input type="date" name="order_paying_date" id="order_paying_date" value="<%= helpers.dateForInput(order.order_paying_date) %>">
+						</div>
+
+						<div class="form-group">
+							<label for="order_delivery_date">Ngày giao/hoàn thành</label>
+							<input type="date" name="order_delivery_date" id="order_delivery_date" value="<%= helpers.dateForInput(order.order_delivery_date) %>">
+						</div>
+
+						<div class="form-group">
+							<label for="order_note">Ghi chú</label>
+							<textarea name="order_note" id="order_note" rows="4"><%= order.order_note || '' %></textarea>
+						</div>
+
+						<button class="btn-admin btn-primary" type="submit">
+							<span class="material-symbols-rounded">save</span>
+							<p>Lưu cập nhật</p>
+						</button>
+					</form>
+
+					<% if (order.order_status !== 'Đã hủy') { %>
+					<form class="cancel-form" method="POST" action="/admin/orders_admin/<%= order.order_id %>/cancel" id="orderCancelForm">
+						<button class="btn-admin btn-outline-danger" type="submit">
+							<span class="material-symbols-rounded">cancel</span>
+							<p>Hủy đơn</p>
+						</button>
+					</form>
+					<% } %>
+				</section>
+
+				<section class="panel panel--full">
+					<div class="panel__header">
+						<h4>Thông tin xử lý</h4>
+					</div>
+
+					<div class="info-list info-list--grid">
+						<div><span>Phương thức thanh toán</span><strong><%= order.paying_method_name || 'Chưa có' %></strong></div>
+						<div><span>Ngày thanh toán</span><strong><%= helpers.formatDate(order.order_paying_date) %></strong></div>
+						<div><span>Ngày giao/hoàn thành</span><strong><%= helpers.formatDate(order.order_delivery_date) %></strong></div>
+						<div><span>Nhân viên phụ trách</span><strong><%= order.staff_name || ('Mã NV: ' + order.staff_id) %></strong></div>
+						<div><span>Ghi chú đơn hàng</span><strong><%= order.order_note || 'Không có ghi chú' %></strong></div>
+					</div>
+				</section>
+			</div>
+		</main>
+	</div>
+
+	<script src="/scripts/admin/order_admin.js"></script>
+	<script src="/scripts/admin/index_admin.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="theme-color" content="#2a7ee4">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="DO GIA DUNG TOAN HIEN">
+	<meta name="description" content="Trang quản lý đơn hàng của Đồ gia dụng Toản Hiền">
+	<link rel="shortcut icon" type="image/x-icon" href="/imgs/thiet-ke-logo-do-gia-dung-hc.png">
+	<link rel="stylesheet" href="/styles/admin/pages/order_admin.css">
+
+	<title>TOẢN HIỀN.Admin - Quản lý đơn hàng</title>
+</head>
+
+<body>
+	<div class="grid-container">
+		<!-- Sidebar -->
+		<%- include('../partials/sidebar_admin') %>
+
+		<!-- Header -->
+		<%- include('../partials/header_admin', title) %>
+
+		<!-- Main -->
+		<main class="main-container">
+			<div class="main-header">
+				<div class="row">
+					<div>
+						<h3 class="main-header__title">Đơn hàng <span class="main-header__badge"><%= data.totalRow %></span></h3>
+						<p class="main-header__desc">Theo dõi, lọc và cập nhật trạng thái đơn hàng từ dữ liệu MySQL.</p>
+					</div>
+					<div class="header-action">
+						<a class="admin-a btn-admin btn-white" href="/admin/orders_admin">
+							<span class="material-symbols-rounded">restart_alt</span>
+							<p>Làm mới</p>
+						</a>
+					</div>
+				</div>
+
+				<ul class="main__nav main-header__tabs nav" role="tablist">
+					<li class="nav__item active"><a class="admin-a nav__link active" href="/admin/orders_admin">Tất cả (<%= summary.total_order %>)</a></li>
+					<li class="nav__item"><a class="admin-a nav__link" href="<%= helpers.buildQueryString(data, { status: 'Chờ thanh toán', page: 1 }) %>">Chờ thanh toán (<%= summary.waiting_count %>)</a></li>
+					<li class="nav__item"><a class="admin-a nav__link" href="<%= helpers.buildQueryString(data, { status: 'Đang giao hàng', page: 1 }) %>">Đang giao (<%= summary.shipping_count %>)</a></li>
+					<li class="nav__item"><a class="admin-a nav__link" href="<%= helpers.buildQueryString(data, { status: 'Hoàn thành', page: 1 }) %>">Hoàn thành (<%= summary.completed_count %>)</a></li>
+					<li class="nav__item"><a class="admin-a nav__link" href="<%= helpers.buildQueryString(data, { status: 'Đã hủy', page: 1 }) %>">Đã hủy (<%= summary.canceled_count %>)</a></li>
+				</ul>
+			</div>
+
+			<div class="order-summary">
+				<div class="summary-card">
+					<span class="material-symbols-rounded summary-card__icon">shopping_bag</span>
+					<div>
+						<small>Tổng đơn</small>
+						<h3><%= summary.total_order %></h3>
+					</div>
+				</div>
+				<div class="summary-card">
+					<span class="material-symbols-rounded summary-card__icon summary-card__icon--blue">local_shipping</span>
+					<div>
+						<small>Đang giao</small>
+						<h3><%= summary.shipping_count %></h3>
+					</div>
+				</div>
+				<div class="summary-card">
+					<span class="material-symbols-rounded summary-card__icon summary-card__icon--green">payments</span>
+					<div>
+						<small>Đã thanh toán</small>
+						<h3><%= summary.paid_count %></h3>
+					</div>
+				</div>
+				<div class="summary-card">
+					<span class="material-symbols-rounded summary-card__icon summary-card__icon--yellow">monitoring</span>
+					<div>
+						<small>Doanh thu hoàn thành</small>
+						<h3><%= formatFunction.toCurrency(summary.completed_revenue) %></h3>
+					</div>
+				</div>
+			</div>
+
+			<form class="order-filter" method="GET" action="/admin/orders_admin">
+				<div class="filter-control filter-control--search">
+					<label for="searchKey">Tìm kiếm</label>
+					<div class="search-box">
+						<span class="material-symbols-rounded">search</span>
+						<input type="search" name="searchKey" id="searchKey" placeholder="Mã đơn, tên khách, SĐT, địa chỉ..." value="<%= data.searchKey %>">
+					</div>
+				</div>
+
+				<div class="filter-control">
+					<label for="status">Trạng thái</label>
+					<select name="status" id="status">
+						<option value="">Tất cả</option>
+						<% statuses.forEach(function(status) { %>
+						<option value="<%= status %>" <%= data.status === status ? 'selected' : '' %>><%= status %></option>
+						<% }) %>
+					</select>
+				</div>
+
+				<div class="filter-control">
+					<label for="paid">Thanh toán</label>
+					<select name="paid" id="paid">
+						<option value="" <%= data.paid === '' ? 'selected' : '' %>>Tất cả</option>
+						<option value="1" <%= data.paid === '1' ? 'selected' : '' %>>Đã thanh toán</option>
+						<option value="0" <%= data.paid === '0' ? 'selected' : '' %>>Chưa thanh toán</option>
+					</select>
+				</div>
+
+				<div class="filter-control">
+					<label for="fromDate">Từ ngày</label>
+					<input type="date" name="fromDate" id="fromDate" value="<%= data.fromDate %>">
+				</div>
+
+				<div class="filter-control">
+					<label for="toDate">Đến ngày</label>
+					<input type="date" name="toDate" id="toDate" value="<%= data.toDate %>">
+				</div>
+
+				<div class="filter-actions">
+					<button class="btn-admin btn-primary" type="submit">
+						<span class="material-symbols-rounded">filter_alt</span>
+						<p>Lọc</p>
+					</button>
+					<a class="admin-a btn-admin btn-white" href="/admin/orders_admin">
+						<span class="material-symbols-rounded">close</span>
+						<p>Xóa lọc</p>
+					</a>
+				</div>
+			</form>
+
+			<div class="main__table-display">
+				<table class="main__table-responsive table">
+					<thead>
+						<tr class="table__heading">
+							<th>#ID</th>
+							<th>Khách hàng</th>
+							<th>Số điện thoại</th>
+							<th>Ngày đặt</th>
+							<th>Tổng tiền</th>
+							<th>Thanh toán</th>
+							<th>Trạng thái</th>
+							<th>Phương thức</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						<% if (!data.orders || data.orders.length === 0) { %>
+						<tr>
+							<td class="empty" colspan="9">Không có đơn hàng phù hợp</td>
+						</tr>
+						<% } else { %>
+						<% data.orders.forEach(function(order) { %>
+						<tr>
+							<td class="order-id">#<%= order.order_id %></td>
+							<td>
+								<div class="customer-cell">
+									<span class="material-symbols-rounded">person</span>
+									<div>
+										<strong><%= order.order_name %></strong>
+										<small>Mã KH: <%= order.customer_id %></small>
+									</div>
+								</div>
+							</td>
+							<td><%= order.order_phone %></td>
+							<td><%= helpers.formatDate(order.order_date) %></td>
+							<td class="money"><%= formatFunction.toCurrency(Number(order.order_total_after || 0)) %></td>
+							<td>
+								<span class="badge <%= order.order_is_paid ? 'badge--paid' : 'badge--unpaid' %>">
+									<%= order.order_is_paid ? 'Đã thanh toán' : 'Chưa thanh toán' %>
+								</span>
+							</td>
+							<td>
+								<span class="badge <%= order.order_status === 'Hoàn thành' ? 'badge--completed' : order.order_status === 'Đang giao hàng' ? 'badge--shipping' : order.order_status === 'Đã hủy' ? 'badge--canceled' : 'badge--waiting' %>">
+									<%= order.order_status %>
+								</span>
+							</td>
+							<td><%= order.paying_method_name || 'Chưa có' %></td>
+							<td class="action">
+								<a class="admin-a btn-table" href="/admin/orders_admin/<%= order.order_id %>">
+									<span class="material-symbols-rounded">visibility</span>
+									Chi tiết
+								</a>
+							</td>
+						</tr>
+						<% }) %>
+						<% } %>
+					</tbody>
+				</table>
+
+				<div class="table-footer">
+					<span class="showEntries">
+						<% if (data.totalRow === 0) { %>
+						0 trên 0 kết quả
+						<% } else { %>
+						<%= (data.page - 1) * data.limit + 1 %>-<%= data.page === data.totalPage ? data.totalRow : data.page * data.limit %> trên <%= data.totalRow %> kết quả
+						<% } %>
+					</span>
+
+					<% if (data.totalPage > 1) { %>
+					<div class="admin-pagination">
+						<% if (data.page > 1) { %>
+						<a href="<%= helpers.buildQueryString(data, { page: data.page - 1 }) %>"><span class="material-symbols-rounded">chevron_left</span></a>
+						<% } %>
+
+						<% for (let i = 1; i <= data.totalPage; i++) { %>
+						<a href="<%= helpers.buildQueryString(data, { page: i }) %>" class="<%= data.page === i ? 'active' : '' %>"><%= i %></a>
+						<% } %>
+
+						<% if (data.page < data.totalPage) { %>
+						<a href="<%= helpers.buildQueryString(data, { page: data.page + 1 }) %>"><span class="material-symbols-rounded">chevron_right</span></a>
+						<% } %>
+					</div>
+					<% } %>
+				</div>
+			</div>
+		</main>
+	</div>
+
+	<script src="/scripts/admin/index_admin.js"></script>
+</body>
+
+</html>
